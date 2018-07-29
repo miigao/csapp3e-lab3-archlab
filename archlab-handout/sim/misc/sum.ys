@@ -1,0 +1,47 @@
+# By Mi GAO. 29/07/2018.
+# Execution begins at address 0
+		.pos 0
+		irmovq stack, %rsp		# Set up stack pointer
+		call main				# Execute main program
+		halt					# Terminate program
+		
+# Sample linked list
+	.align 8
+ele1:
+		.quad 0x00c
+		.quad ele2
+ele2:
+		.quad 0x0b0
+		.quad ele3
+ele3:
+		.quad 0xa00
+		.quad 0
+
+main:
+		irmovq ele1, %rdi
+		#irmovq $4, %rsi
+		call sum
+		ret
+
+# long sum_list(list_ ptr ls)
+# start in %rdi
+sum:
+		irmovq $8, %r8
+		xorq %rax, %rax
+		andq %rdi, %rdi			# Set CC
+		jmp test				# Goto test
+loop:
+		mrmovq (%rdi), %r9
+		#mrmovq (%r9), %r9
+		addq %r9, %rax
+		addq %r8, %rdi
+		mrmovq (%rdi), %rdi
+		andq %rdi, %rdi			# Set CC
+test:
+		jne loop
+		ret
+		
+# Stack start here and grows to lower addresses
+	.pos 0x200
+stack:
+		
