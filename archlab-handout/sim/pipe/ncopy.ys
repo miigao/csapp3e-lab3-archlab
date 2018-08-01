@@ -15,24 +15,64 @@ ncopy:
 
 ##################################################################
 # You can modify this portion
-	# Loop header
-	xorq %rax,%rax		# count = 0;
-	andq %rdx,%rdx		# len <= 0?
-	jle Done		# if so, goto Done:
+		# Loop header
+		xorq %rax,%rax			# count = 0
+		jmp N6
+Loop:	mrmovq (%rdi), %r8		# read val from src
+		mrmovq $8(%rdi), %r9	# read val from src + 8
+		mrmovq $16(%rdi), %r10	# read val from src + 16
+		mrmovq $24(%rdi), %r11	# read val from src + 24
+		mrmovq $32(%rdi), %r12	# read val from src + 32
+		mrmovq $40(%rdi), %r13	# read val from src + 40
+		rmmovq %r8, (%rsi)		# store it to dst
+		rmmovq %r9, $8(%rsi)	# store it to dst + 8
+		rmmovq %r10, $16(%rsi)	# store it to dst + 16
+		rmmovq %r11, $24(%rsi)	# store it to dst + 24
+		rmmovq %r12, $32(%rsi)	# store it to dst + 32
+		rmmovq %r13, $40(%rsi)	# store it to dst + 40
+		iaddq $48, %rdi			# src += 48
+		iaddq $48, %rsi			# dst += 48
+		andq %r8, %r8			# val <= 0?
+		jle N1					# if so, goto N1:
+		iaddq $1, %rax			# count++
 
-Loop:	mrmovq (%rdi), %r10	# read val from src...
-	rmmovq %r10, (%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Npos		# if so, goto Npos:
-	irmovq $1, %r10
-	addq %r10, %rax		# count++
-Npos:	irmovq $1, %r10
-	subq %r10, %rdx		# len--
-	irmovq $8, %r10
-	addq %r10, %rdi		# src++
-	addq %r10, %rsi		# dst++
-	andq %rdx,%rdx		# len > 0?
-	jg Loop			# if so, goto Loop:
+N1:		andq %r9, %r9			# val <= 0?
+		jle N2					# if so, goto N2:
+		iaddq $1, %rax			# count++
+
+N2:		andq %r10, %r10			# val <= 0?
+		jle N3					# if so, goto N3:
+		iaddq $1, %rax			# count++
+
+N3:		andq %r11, %r11			# val <= 0?
+		jle N4					# if so, goto N4:
+		iaddq $1, %rax			# count++
+
+N4:		andq %r12, %r12			# val <= 0?
+		jle N5					# if so, goto N5:
+		iaddq $1, %rax			# count++
+
+N5:		andq %r13, %r13			# val <= 0?
+		jle N6					# if so, goto N6:
+		iaddq $1, %rax			# count++
+
+N6:		iaddq $-6, %rdx			# len -= 6, len >= 0?
+		jge Loop				# if so, goto Loop:
+		iaddq $6, %rdx			# len += 6
+		jmp Check
+
+Fin:	mrmovq (%rdi), %r10		# read val from src
+		iaddq $8, %rdi			# src += 8
+		andq %r10, %r10			# val <= 0?
+		jle X					# if so, goto X:
+		iaddq $1, %rax			# count++
+		
+X:		rmmovq %r10, (%rsi)		# store it to dst
+		iaddq $8, %rsi			# dst += 8
+		iaddq $-1, %rdx			# len --, len >= 0?
+Check:	jg Fin
+		
+
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
